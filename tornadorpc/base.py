@@ -17,13 +17,15 @@ import tornado.httpserver
 import types
 import traceback
 from tornadorpc.utils import getcallargs
-import collections
+import collections, base64
 
 
 # Configuration element
 class Config(object):
     verbose = True
     short_errors = True
+    basic_auth = False
+    basic_auth_callback = None
 
 config = Config()
 
@@ -163,6 +165,16 @@ class BaseRPCParser(object):
         handler._requests -= 1
         if handler._requests > 0:
             return
+
+        if config.basic_auth:
+            auth_header = handler.request.headers.get('Authorization')
+            if auth_header is None or not auth_header.startswith('Basic '):
+                raise tornado.web.HTTPError(403)
+            auth_decoded = base64.b64decode(auth_header[6:])
+            basicauth_user = auth_decoded.decode("utf-8").split(':')[0]
+            basicauth_pass = auth_decoded.decode("utf-8").split(':')[1]
+            if not config.basic_auth_callback(basicauth_user, basicauth_pass):
+               raise tornado.web.HTTPError(403)
         # We are finished with requests, send response
         if handler._RPC_finished:
             # We've already sent the response
