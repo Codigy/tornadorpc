@@ -181,11 +181,13 @@ class BaseRPCParser(object):
             raise Exception("Error trying to send response twice.")
         handler._RPC_finished = True
         responses = tuple(handler._results)
-        response_text = self.parse_responses(responses)
-        if not isinstance(response_text, str):
-            # Likely a fault, or something messed up
-            response_text = self.encode(response_text)
-        # Calling the async callback
+
+        try:
+          response_text = self.parse_responses(responses)
+          if type(response_text) is not str:
+              response_text = self.encode(response_text)
+        except TypeError:
+            response_text = handler.on_result('{"jsonrpc": "2.0", "error": {"code": -32600, "message": "Invalid json."}, "id": null}')
         handler.on_result(response_text)
 
     def traceback(self, method_name='REQUEST', params=[]):

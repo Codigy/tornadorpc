@@ -51,11 +51,11 @@ class XMLRPCParser(BaseRPCParser):
     def parse_responses(self, responses):
         try:
             if isinstance(responses[0], xmlrpc.client.Fault):
-                return xmlrpc.client.dumps(responses[0])
+                return xmlrpc.client.dumps(responses[0], allow_none=1)
         except IndexError:
             pass
         try:
-            response_xml = xmlrpc.client.dumps(responses, methodresponse=True)
+            response_xml = xmlrpc.client.dumps(responses, methodresponse=True, allow_none=1)
         except TypeError:
             return self.faults.internal_error()
         return response_xml
