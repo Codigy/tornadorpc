@@ -38,7 +38,7 @@ class JSONRPCParser(BaseRPCParser):
 
     def parse_request(self, request_body):
         try:
-            request = loads(request_body.decode('utf-8'))
+            request = loads(repr(request_body.decode('utf-8')))
         except:
             # Bad request formatting
             self.traceback()
